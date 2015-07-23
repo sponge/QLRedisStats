@@ -1,0 +1,141 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Live Stats</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/react-with-addons.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.13.3/JSXTransformer.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.0/lodash.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reqwest/2.0.0/reqwest.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.3/moment.js"></script>
+    <script src="/static/moment-duration-format.js"></script>
+    <link rel="stylesheet" href="static/style.css"/>
+  </head>
+  <body>
+    <p class="quicklaunch"><b>Launch into a match (Game must be closed!):</b>
+    <a href="steam://run/344320//+connect 172.17.2.10:27015">1</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:27016">2</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:27017">3</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:27018">4</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:27019">5</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:27020">6</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:26900">7</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:26901">8</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:26902">9</a>
+    <a href="steam://run/344320//+connect 172.17.2.10:26903">10</a>
+    </p>
+    <div id="content"></div>
+    <script type="text/jsx">
+      var App = React.createClass({displayName: 'App',
+
+        getInitialState: function() {
+          return {loaded: false, lastMatch: null, completedMatches: [], matchesInProgress: []};
+        },
+
+        updateLoop: function() {
+          var ul = this.updateLoop;
+          reqwest({
+              url: '/update',
+              method: 'get',
+              type: 'json',
+              data: { lastMatch: this.state.lastMatch },
+              success: this.gotNewMatches,
+              complete: this.getNewMatches
+          });
+        },
+
+        getNewMatches() {
+          setTimeout(this.updateLoop, 3000);
+        },
+
+        gotNewMatches: function(resp) {
+          console.info("gotNewMatches");
+          console.debug(resp);
+
+          var newState = _.cloneDeep(this.state);
+          if (resp['matches'].length) {
+            newState.lastMatch = resp['matches'][0].MATCH_GUID;
+            Array.prototype.unshift.apply(newState.completedMatches, resp['matches']);
+          }
+          newState.matchesInProgress = resp['ongoing'];
+          this.replaceState(newState);
+        },
+
+        componentDidMount: function() {
+          this.updateLoop();
+         },
+        render: function() {
+          var cs = React.addons.classSet;
+
+          function renderScoreLine(line) {
+            return <p className={line.class}><span className="value">{line.value}</span> {line.name}</p>
+          }
+          function renderMatch(match) {
+
+            if ( ['FFA', 'RR', 'DUEL', 'RACE'].indexOf(match.GAME_TYPE) == -1 ) {
+              // team modes
+              var redPlayers = _.chain(match.STATS).filter({TEAM: 1}).pluck('NAME').value();
+              var bluePlayers = _.chain(match.STATS).filter({TEAM: 2}).pluck('NAME').value();
+              var scoreLine = [
+                { 'name': redPlayers.join(', '),  'value': match.TSCORE0,  'class': 'red'  },
+                { 'name': bluePlayers.join(', '), 'value':  match.TSCORE1, 'class': 'blue' },
+              ];
+            } else {
+              //individual modes
+              //var players = _.chain(match.STATS).filter({TEAM: 0}).value();
+              var players = match.STATS;
+              var scoreLine = _.map(players, function(player) { return { 'name': player.NAME, 'value': player.SCORE } })
+            }
+
+            var classes = cs({ aborted: match.ABORTED, match: true });
+
+            return <div key={match.MATCH_GUID} className={classes}>
+              <p className="header">
+                {match.ABORTED ? "Aborted" : ""} {match.GAME_TYPE} on {match.MAP} {"("+ match.EXIT_MSG +")"}
+                <span className="time">{moment.duration(match.GAME_LENGTH * 1000).format("m:ss")}</span><br/>
+	        <span>{match.SERVER_TITLE}</span>
+              </p>
+              <img className="mapshot" src={"/static/levelshots/"+match.MAP+".jpg"}/>
+              <div className="scorelines">
+                {_.map(scoreLine, renderScoreLine, this)}
+              </div>
+              <hr/>
+            </div>
+          }
+
+          function renderInProgressTeam(team) {
+            if ( team.length == 0) {
+              return;
+            }
+            return <p>{team.join(', ')}</p>
+          }
+
+          function renderMatchInProgress(match) {
+            return <div key={match.MATCH_GUID}>
+              Approx match progress: {(match.LAST_EVENT_TIME / 60).toFixed(2)} minutes
+              {_.map(match.TEAMS, renderInProgressTeam, this)}
+              <hr/>
+            </div>
+          }
+
+          return (
+            <span>
+              <div className="completedMatches">
+                {_.map(this.state.completedMatches, renderMatch, this)}
+              </div>
+              <div className="matchesInProgress">
+                {_.map(this.state.matchesInProgress, renderMatchInProgress, this)}
+              </div>
+            </span>
+          );
+        }
+
+      });
+      React.render(
+        React.createElement(App, null),
+        document.getElementById('content')
+      );
+    </script>
+  </body>
+</html>

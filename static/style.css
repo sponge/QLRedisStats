@@ -1,0 +1,93 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #050505;
+  color: #ccc;
+  font-family: Segoe UI;
+}
+
+hr {
+  padding-top: 1em;
+  border: 0;
+  border-bottom: 1px solid #333;
+  clear: both;
+}
+
+p {
+  padding: 0;
+  margin: 0;
+}
+
+div.matchesInProgress, div.completedMatches {
+  display: inline-block;
+  width: 50%;
+  vertical-align: top;
+  clear: both;
+}
+
+.quicklaunch {
+  background-color: #222;
+  padding: 6px;
+  margin-bottom: 1em;
+}
+
+.quicklaunch a {
+  color: #FF0000;
+  display: inline-block;
+  background-color: black;
+  padding: 0 8px;
+  text-decoration: none;
+}
+
+span.value {
+  display: inline-block;
+  min-width: 30px;
+  text-align: center;
+  font-weight: bold;
+  margin-right: 0.5em;
+}
+
+p.red span.value {
+  background-color: #FF3333;
+  color: black;
+}
+
+p.blue span.value {
+  background-color: #3333FF;
+  color: black;
+}
+
+
+p.red {
+  color: #FF3333;
+}
+
+p.blue {
+  color: #3333FF;
+}
+
+.aborted.match {
+  opacity: 0.25;
+}
+
+.aborted.match:hover {
+  opacity: 1.0;
+}
+
+.header {
+  margin-bottom: 1em;
+}
+
+.header .time {
+  display: block;
+  float: right;
+}
+
+.mapshot {
+  display: inline-block;
+  width: 125px;
+  float: left;
+}
+
