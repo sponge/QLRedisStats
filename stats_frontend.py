@@ -9,7 +9,7 @@ app = Flask(__name__, static_url_path='/static')
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
-REDIS_DB = 5
+REDIS_DB = 6
 
 
 #@app.route('/<path:path>')
@@ -86,4 +86,4 @@ def index():
 
 if __name__ == "__main__":
     r = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB)
-    app.run(debug=True, host='0.0.0.0', port=80)
+    app.run(debug=True, host='0.0.0.0', port=8080)

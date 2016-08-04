@@ -46,7 +46,7 @@
         },
 
         getNewMatches() {
-          setTimeout(this.updateLoop, 3000);
+          setTimeout(this.updateLoop, 20000);
         },
 
         gotNewMatches: function(resp) {
@@ -73,19 +73,23 @@
           }
           function renderMatch(match) {
 
+            if ( match.ABORTED ) {
+              return;
+            }
+
             if ( ['FFA', 'RR', 'DUEL', 'RACE'].indexOf(match.GAME_TYPE) == -1 ) {
               // team modes
               var redPlayers = _.chain(match.STATS).filter({TEAM: 1}).pluck('NAME').value();
               var bluePlayers = _.chain(match.STATS).filter({TEAM: 2}).pluck('NAME').value();
               var scoreLine = [
-                { 'name': redPlayers.join(', '),  'value': match.TSCORE0,  'class': 'red'  },
-                { 'name': bluePlayers.join(', '), 'value':  match.TSCORE1, 'class': 'blue' },
+                { 'name': redPlayers.join(', ').replace(/\^[0-9]/g, ''),  'value': match.TSCORE0,  'class': 'red'  },
+                { 'name': bluePlayers.join(', ').replace(/\^[0-9]/g, ''), 'value':  match.TSCORE1, 'class': 'blue' },
               ];
             } else {
               //individual modes
               //var players = _.chain(match.STATS).filter({TEAM: 0}).value();
               var players = match.STATS;
-              var scoreLine = _.map(players, function(player) { return { 'name': player.NAME, 'value': player.SCORE } })
+              var scoreLine = _.map(players, function(player) { return { 'name': player.NAME.replace(/\^[0-9]/g, ''), 'value': player.SCORE } })
             }
 
             var classes = cs({ aborted: match.ABORTED, match: true });
@@ -94,7 +98,8 @@
               <p className="header">
                 {match.ABORTED ? "Aborted" : ""} {match.GAME_TYPE} on {match.MAP} {"("+ match.EXIT_MSG +")"}
                 <span className="time">{moment.duration(match.GAME_LENGTH * 1000).format("m:ss")}</span><br/>
-	        <span>{match.SERVER_TITLE}</span>
+	        <span>{match.SERVER_TITLE}</span><br/>
+            <span>{match.MATCH_GUID}</span>
               </p>
               <img className="mapshot" src={"/static/levelshots/"+match.MAP+".jpg"}/>
               <div className="scorelines">
@@ -108,7 +113,7 @@
             if ( team.length == 0) {
               return;
             }
-            return <p>{team.join(', ')}</p>
+            return <p>{team.join(', ').replace(/\^[0-9]/g, '')}</p>
           }
 
           function renderMatchInProgress(match) {

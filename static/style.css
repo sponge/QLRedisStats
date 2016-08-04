@@ -25,6 +25,7 @@ div.matchesInProgress, div.completedMatches {
   width: 50%;
   vertical-align: top;
   clear: both;
+  padding-right: 1em;
 }
 
 .quicklaunch {
