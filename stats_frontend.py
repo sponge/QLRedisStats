@@ -9,12 +9,12 @@ app = Flask(__name__, static_url_path='/static')
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
-REDIS_DB = 6
+REDIS_DB = 5
 
+teams = {0: 0, 1:1, 2:2, 3:3, "FREE": 0, "RED": 1, "BLUE": 2, "SPECTATOR": 3}
 
-#@app.route('/<path:path>')
-#def send_js(path):
-#    return send_from_directory('static', path)a
+def teamMap(nameStr):
+    return 
 
 def getIncompleteMatchInfo(guid):
     raw_events = r.lrange("events_%s" % guid, 0, -1)
@@ -26,13 +26,14 @@ def getIncompleteMatchInfo(guid):
 
     for e in events:
         if 'NAME' in e and 'TEAM' in e:
-            teamed_players[e['TEAM']].add(e['NAME'])
+            teamed_players[teams[e['TEAM']]].add(e['NAME'])
 
         if 'KILLER' in e and e['KILLER'] is not None:
-            teamed_players[e['KILLER']['TEAM']].add(e['KILLER']['NAME'])
+            teamNum = teams[e['KILLER']['TEAM']]
+            teamed_players[teamNum].add(e['KILLER']['NAME'])
 
         if 'VICTIM' in e and e['VICTIM'] is not None:
-            teamed_players[e['VICTIM']['TEAM']].add(e['VICTIM']['NAME'])
+            teamed_players[teams[e['VICTIM']['TEAM']]].add(e['VICTIM']['NAME'])
     response['TEAMS'] = map(list, teamed_players)
     response['MATCH_GUID'] = guid
     return response

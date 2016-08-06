@@ -28,18 +28,22 @@ REDIS_PORT = 6379
 REDIS_DB = 5
 
 hosts = [
-    'tcp://127.0.0.1:27015',
-    'tcp://127.0.0.1:27016',
-    'tcp://127.0.0.1:27017',
-    'tcp://127.0.0.1:27018',
-    'tcp://127.0.0.1:27019',
-    'tcp://127.0.0.1:27020',
-    'tcp://127.0.0.1:26900',
-    'tcp://127.0.0.1:26901',
-    'tcp://127.0.0.1:26902',
-#    'tcp://127.0.0.1:27903',
-#    'tcp://127.0.0.1:27904',
-#    'tcp://127.0.0.1:27905',
+    'tcp://172.17.2.10:26900',
+    'tcp://172.17.2.10:26901',
+    'tcp://172.17.2.10:26902',
+    'tcp://172.17.2.10:26903',
+    'tcp://172.17.2.10:26904',
+    'tcp://172.17.2.10:26905',
+    'tcp://172.17.2.10:27015',
+    'tcp://172.17.2.10:27016',
+    'tcp://172.17.2.10:27017',
+    'tcp://172.17.2.10:27018',
+    'tcp://172.17.2.10:27019',
+    'tcp://172.17.2.10:27020',
+    'tcp://172.17.2.11:26900',
+    'tcp://172.17.2.11:26901',
+    'tcp://172.17.2.11:26902',
+    'tcp://172.17.2.11:26903',
 ]
 
 connections = []
@@ -130,22 +134,22 @@ def verbose( args ):
                         data = msg['DATA']
                         json_msg = json.dumps(msg['DATA'])
                         table = msg['TABLE'] if 'TABLE' in msg else msg['TYPE']
-                        if table in [ 'PLYR_DEATHS', 'PLYR_MEDAL' ]: 
+                        if table in [ 'PLAYER_DEATH', 'PLAYER_MEDAL', 'PLAYER_SWITCHTEAM', 'PLAYER_CONNECT', 'PLAYER_DISCONNECT']: 
                             r.rpush('events_%s' % guid, json_msg)
                             logging.info("Pushing %s event to events_%s" % (table, guid,))
-                        elif table in [ 'PLYR_STATS' ]:
+                        elif table in [ 'PLAYER_STATS' ]:
                             r.rpush('stats_%s' % guid, json_msg)
                             logging.info("Pushing stats to stats_%s" % guid)
-                        elif table in [ 'REPORTGAME' ]:
+                        elif table in [ 'MATCH_REPORT' ]:
                             r.set('report_%s' % guid, json_msg)                  
                             r.lpush('recent_matches', guid)
                             logging.info("Pushing match to report_%s" % guid)
-                        elif table != 'PLYR_KILLS':
+                        elif table not in ['PLAYER_KILL']:
                             logging.info( pprint.pformat( msg ) )
 
-                        if table == 'REPORTGAME':
+                        if table == 'MATCH_REPORT':
                             r.srem('ongoing_matches', guid)
-                        else:
+                        elif table == 'MATCH_STARTED':
                             r.sadd('ongoing_matches', guid)
                     except Exception, e:
                         logging.info( msg )
